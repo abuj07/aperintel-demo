@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aperintel — Autonomous Platform for Enterprise Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#08142E;--navy2:#0D1F47;--navy3:#132860;--navyH:#1A3480;
+  --teal:#0EA5E9;--tealD:#0284C7;--tealL:#38BDF8;--tealGlow:rgba(14,165,233,0.15);
+  --green:#10B981;--amber:#F59E0B;--red:#EF4444;--violet:#8B5CF6;
+  --dark:#0F172A;--body:#1E293B;--mid:#475569;--muted:#64748B;--light:#94A3B8;--faint:#CBD5E1;
+  --border:rgba(255,255,255,0.07);--borderL:#E2E8F0;
+  --surface:#F8FAFC;--card:#FFFFFF;
+  --s:220px;--tb:54px;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--body);font-size:14px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--faint);border-radius:4px}
+
+/* ── Shell ── */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--s);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;position:relative;overflow:hidden;border-right:1px solid var(--border)}
+.sidebar::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:0.4}
+/* Dot grid on sidebar */
+.sidebar::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(14,165,233,0.07) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--surface)}
+
+/* ── Logo ── */
+.slogo{padding:18px 16px 15px;border-bottom:1px solid var(--border);position:relative;z-index:1}
+.slogo-row{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--teal) 0%,var(--tealD) 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 12px rgba(14,165,233,0.4),0 0 0 1px rgba(14,165,233,0.3)}
+.logo-name{font-family:'Instrument Serif',serif;font-size:20px;color:#fff;letter-spacing:0.3px;line-height:1}
+.logo-sub{font-size:9px;color:rgba(14,165,233,0.6);letter-spacing:2.8px;text-transform:uppercase;font-weight:500;padding-left:39px}
+
+/* ── Nav ── */
+.nav-group{padding:10px 0 2px;position:relative;z-index:1}
+.nav-section-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:1.8px;color:rgba(255,255,255,0.2);padding:6px 16px;font-weight:600}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:rgba(255,255,255,0.45);font-size:12.5px;font-weight:400;border-left:2px solid transparent;transition:color 0.15s,background 0.15s,border-color 0.15s;user-select:none;position:relative}
+.ni:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04)}
+.ni.on{color:#fff;background:rgba(14,165,233,0.1);border-left-color:var(--teal)}
+.ni-ic{width:14px;height:14px;opacity:0.5;flex-shrink:0;display:flex;transition:opacity 0.15s}
+.ni.on .ni-ic,.ni:hover .ni-ic{opacity:1}
+.ni-badge{margin-left:auto;font-size:10px;font-weight:600;padding:2px 6px;border-radius:8px;min-width:18px;text-align:center;line-height:1.4}
+.ni-badge.teal{background:rgba(14,165,233,0.2);color:var(--teal)}
+.ni-badge.amber{background:rgba(245,158,11,0.2);color:var(--amber)}
+.sdiv{height:1px;background:var(--border);margin:6px 0}
+
+/* ── Sidebar footer ── */
+.sfooter{margin-top:auto;padding:12px 14px;border-top:1px solid var(--border);position:relative;z-index:1}
+.org-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background 0.15s}
+.org-row:hover{background:rgba(255,255,255,0.05)}
+.org-av{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--teal),var(--tealD));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.org-name{font-size:12px;color:rgba(255,255,255,0.8);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.org-tier{font-size:10px;color:rgba(255,255,255,0.28);margin-top:1px}
+
+/* ── Topbar ── */
+.topbar{height:var(--tb);background:var(--card);border-bottom:1px solid var(--borderL);display:flex;align-items:center;padding:0 22px;gap:12px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.tb-left{flex:1;min-width:0}
+.tb-title{font-size:14.5px;font-weight:600;color:var(--dark);letter-spacing:-0.1px}
+.tb-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--borderL);border-radius:20px;padding:4px 11px;font-size:11.5px;color:var(--mid);white-space:nowrap}
+.tb-pill.blue{background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8}
+.tb-pill.green{background:#F0FDF4;border-color:#BBF7D0;color:#166534}
+.blink{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+.tb-btn{width:32px;height:32px;border-radius:8px;background:var(--surface);border:1px solid var(--borderL);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;color:var(--mid)}
+.tb-btn:hover{background:var(--card);border-color:var(--faint);color:var(--dark)}
+.cmd-trigger{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--borderL);border-radius:8px;padding:5px 11px;font-size:12px;color:var(--light);cursor:pointer;transition:all 0.15s;min-width:170px}
+.cmd-trigger:hover{border-color:var(--faint);background:var(--card)}
+.cmd-trigger kbd{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;background:var(--card);border:1px solid var(--borderL);border-radius:4px;padding:1px 5px;color:var(--muted)}
+
+/* ── Content / views ── */
+.content{flex:1;overflow-y:auto;position:relative}
+.view{display:none;animation:vIn 0.18s var(--ease)}
+.view.on{display:flex;flex-direction:column;height:100%}
+@keyframes vIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CHAT ── */
+.chat{display:flex;flex-direction:column;height:100%}
+.chat-feed{flex:1;overflow-y:auto;padding:28px 36px;display:flex;flex-direction:column;gap:20px}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:32px;text-align:center;animation:vIn 0.3s var(--ease)}
+/* Brain SVG logo */
+.brain-logo{width:72px;height:72px;display:flex;align-items:center;justify-content:center;position:relative}
+.brain-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(14,165,233,0.25);animation:ringPulse 3s ease-in-out infinite}
+.brain-ring2{position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(14,165,233,0.1);animation:ringPulse 3s ease-in-out infinite 0.5s}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.05);opacity:1}}
+.brain-bg{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(14,165,233,0.15) 0%,rgba(8,20,46,0.95) 70%);border:1.5px solid rgba(14,165,233,0.3);display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(14,165,233,0.2),inset 0 0 16px rgba(14,165,233,0.05)}
+.w-title{font-family:'Instrument Serif',serif;font-size:26px;color:var(--dark);font-style:italic;letter-spacing:-0.3px;line-height:1.2}
+.w-sub{font-size:13.5px;color:var(--muted);max-width:460px;line-height:1.7}
+.sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:560px}
+.sug{background:var(--card);border:1px solid var(--borderL);border-radius:22px;padding:8px 15px;font-size:12.5px;color:var(--mid);cursor:pointer;transition:all 0.15s;line-height:1.4;text-align:left}
+.sug:hover{border-color:var(--teal);color:var(--dark);background:#F0F9FF;transform:translateY(-1px);box-shadow:0 2px 8px rgba(14,165,233,0.1)}
+
+.msg{display:flex;gap:10px;animation:msgIn 0.2s var(--ease)}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg.u{flex-direction:row-reverse}
+.av{width:28px;height:28px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;letter-spacing:0.3px}
+.av.ai{background:linear-gradient(135deg,var(--navy2),var(--navyH));color:var(--teal);box-shadow:0 0 0 1px rgba(14,165,233,0.25)}
+.av.u{background:var(--teal);color:#fff}
+.mbody{max-width:76%;min-width:0}
+.msg.u .mbody{align-items:flex-end;display:flex;flex-direction:column}
+.bubble{background:var(--card);border:1px solid var(--borderL);border-radius:13px;padding:11px 15px;font-size:13.5px;line-height:1.7;color:var(--body);word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.msg.u .bubble{background:var(--navy2);color:#fff;border-color:var(--navy2);border-radius:13px 13px 3px 13px}
+.msg.ai .bubble{border-radius:3px 13px 13px 13px}
+.bubble.warn{background:#FFFBEB;border-color:#FDE68A;color:#78350F}
+.mtime{font-size:10px;color:var(--light);margin-top:4px;padding:0 3px}
+.mmeta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.mchip{display:inline-flex;align-items:center;gap:4px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:5px;padding:2px 7px;font-size:10.5px;color:#1D4ED8;font-weight:500}
+.mchip.cost{background:#F0FDF4;border-color:#BBF7D0;color:#166534}
+.mchip.ms{background:var(--surface);border-color:var(--borderL);color:var(--muted)}
+.cits{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.cit{display:flex;align-items:center;gap:4px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:6px;padding:3px 9px;font-size:11px;color:#0369A1;cursor:pointer;transition:background 0.12s}
+.cit:hover{background:#E0F2FE}
+.cdot{width:5px;height:5px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.cbar{display:flex;align-items:center;gap:7px;margin-top:7px}
+.cbar-lbl{font-size:10.5px;color:var(--muted)}
+.cbar-track{width:60px;height:3px;background:var(--borderL);border-radius:2px;overflow:hidden}
+.cbar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.7s var(--ease)}
+.cbar-pct{font-size:10.5px;color:var(--green);font-weight:600;font-family:'DM Mono',monospace}
+.typing-ind{display:inline-flex;align-items:center;gap:4px;padding:11px 14px}
+.typing-ind span{width:6px;height:6px;border-radius:50%;background:var(--light);animation:tp 1.3s ease-in-out infinite}
+.typing-ind span:nth-child(2){animation-delay:.2s}.typing-ind span:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.chat-bottom{padding:14px 36px 20px;background:var(--card);border-top:1px solid var(--borderL);flex-shrink:0}
+.chat-box{display:flex;gap:9px;align-items:flex-end;background:var(--surface);border:1.5px solid var(--borderL);border-radius:14px;padding:10px 12px;transition:border-color .2s,box-shadow .2s}
+.chat-box:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,165,233,0.09)}
+.chat-ta{flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--dark);resize:none;min-height:22px;max-height:110px;line-height:1.6}
+.chat-ta::placeholder{color:var(--light)}
+.sbtn{width:34px;height:34px;border-radius:10px;background:var(--navy2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.sbtn:hover{background:var(--navyH);transform:scale(1.04)}
+.sbtn:active{transform:scale(.96)}
+.sbtn:disabled{background:var(--borderL);cursor:not-allowed;transform:none}
+.chat-foot{display:flex;justify-content:space-between;margin-top:6px;padding:0 2px}
+.chat-hint{font-size:11px;color:var(--light)}
+.kbs{display:flex;gap:10px}
+.kb{font-size:11px;color:var(--light)}
+.kb kbd{font-family:'DM Mono',monospace;font-size:10px;background:var(--surface);border:1px solid var(--borderL);border-radius:4px;padding:1px 4px;color:var(--muted)}
+
+/* ── Documents ── */
+.wrap{padding:22px 26px;display:flex;flex-direction:column;gap:16px}
+.sec-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-t{font-size:14.5px;font-weight:600;color:var(--dark)}
+.sec-s{font-size:12px;color:var(--muted);margin-top:2px}
+.toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.srch{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--borderL);border-radius:8px;padding:6px 11px;min-width:210px;transition:all .15s}
+.srch:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,165,233,.08)}
+.srch input{border:none;outline:none;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--dark);background:none;width:100%}
+.srch input::placeholder{color:var(--light)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--card);border:1px solid var(--borderL);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--mid);cursor:pointer;transition:all .14s;white-space:nowrap}
+.chip.on{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+.chip:hover:not(.on){border-color:var(--faint)}
+.sstrip{display:flex;gap:0;background:var(--card);border:1px solid var(--borderL);border-radius:11px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sstat{display:flex;flex-direction:column;align-items:center;padding:14px 22px;flex:1;border-right:1px solid var(--borderL)}
+.sstat:last-child{border-right:none}
+.sstat-v{font-size:22px;font-family:'Instrument Serif',serif;color:var(--dark);font-weight:400;letter-spacing:-.3px;line-height:1}
+.sstat-l{font-size:11px;color:var(--muted);margin-top:3px;text-align:center}
+.dtable{background:var(--card);border:1px solid var(--borderL);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.dhead{display:grid;grid-template-columns:2.4fr 1.1fr 90px 100px 75px;padding:9px 18px;background:var(--surface);border-bottom:1px solid var(--borderL);font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.9px}
+.drow{display:grid;grid-template-columns:2.4fr 1.1fr 90px 100px 75px;padding:12px 18px;border-bottom:1px solid var(--borderL);align-items:center;cursor:pointer;transition:background .1s}
+.drow:last-child{border-bottom:none}
+.drow:hover{background:#F8FAFF}
+.drow:hover .dnt{color:var(--teal)}
+.dic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.dnc{display:flex;align-items:center;gap:10px;min-width:0}
+.dnt{font-size:13px;font-weight:500;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s}
+.dp{font-size:11px;color:var(--light);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc{font-size:12.5px;color:var(--mid)}
+.dc.m{font-family:'DM Mono',monospace;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge.ok{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.badge.pr{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.badge.er{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+
+/* ── Connectors ── */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:13px}
+.cc{background:var(--card);border:1px solid var(--borderL);border-radius:12px;padding:18px;transition:all .15s;position:relative;overflow:hidden}
+.cc:hover{border-color:#BAE6FD;box-shadow:0 4px 16px rgba(14,165,233,.08)}
+.cc.live{border-color:#A7F3D0}
+.cc.live::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--green)}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px}
+.cc-logo{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.cpill{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:10px}
+.cpill.live{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.cpill.av{background:var(--surface);color:var(--mid);border:1px solid var(--borderL)}
+.cpill.soon{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.cc-name{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:1px}
+.cc-phase{font-size:10.5px;color:var(--muted);margin-bottom:10px}
+.cc-desc{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:12px}
+.cc-stats{display:flex;gap:14px;margin-bottom:12px}
+.ccs{font-size:12px;color:var(--muted)}
+.ccs strong{color:var(--dark);font-weight:600}
+.cc-perm{display:flex;align-items:center;gap:4px;margin-bottom:12px}
+.cc-perm-t{font-size:10.5px;color:var(--green);font-weight:500}
+.cbtn{width:100%;padding:8px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;transition:all .14s}
+.cbtn.go{background:var(--navy2);color:#fff}
+.cbtn.go:hover{background:var(--navyH)}
+.cbtn.mgd{background:var(--surface);color:var(--dark);border:1px solid var(--borderL)}
+.cbtn.mgd:hover{border-color:var(--faint)}
+.cbtn.no{background:var(--surface);color:var(--light);cursor:default;border:1px solid var(--borderL)}
+
+/* ── Analytics ── */
+.agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.acard{background:var(--card);border:1px solid var(--borderL);border-radius:11px;padding:16px 18px;transition:box-shadow .15s}
+.acard:hover{box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.acard-l{font-size:11.5px;color:var(--muted);font-weight:500;margin-bottom:5px}
+.acard-v{font-size:28px;font-family:'Instrument Serif',serif;color:var(--dark);letter-spacing:-.4px;line-height:1}
+.acard-c{font-size:11.5px;font-weight:600;margin-top:4px}
+.up{color:var(--green)}.flat{color:var(--muted)}.dn{color:var(--red)}
+.crow{display:grid;grid-template-columns:1.65fr 1fr;gap:12px}
+.chart-c{background:var(--card);border:1px solid var(--borderL);border-radius:11px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ct{font-size:13.5px;font-weight:600;color:var(--dark);margin-bottom:2px}
+.cs{font-size:12px;color:var(--muted);margin-bottom:14px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.brow{display:flex;align-items:center;gap:10px}
+.blbl{font-size:12px;color:var(--mid);width:105px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btrk{flex:1;height:7px;background:var(--surface);border-radius:4px;overflow:hidden}
+.bfil{height:100%;border-radius:4px;transition:width .9s var(--ease)}
+.bval{font-size:11.5px;color:var(--mid);font-family:'DM Mono',monospace;width:30px;text-align:right;flex-shrink:0}
+.mini{display:flex;flex-direction:column;border-top:1px solid var(--borderL);margin-top:14px;padding-top:12px}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--borderL)}
+.mrow:last-child{border-bottom:none;padding-bottom:0}
+.ml{font-size:12.5px;color:var(--dark)}
+.mv{font-size:12.5px;font-weight:600;font-family:'DM Mono',monospace}
+.qtable{background:var(--card);border:1px solid var(--borderL);border-radius:11px;overflow:hidden}
+.qhead{display:grid;grid-template-columns:1fr 90px 95px 70px 65px;padding:9px 18px;background:var(--surface);border-bottom:1px solid var(--borderL);font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.9px}
+.qrow{display:grid;grid-template-columns:1fr 90px 95px 70px 65px;padding:11px 18px;border-bottom:1px solid var(--borderL);align-items:center;transition:background .1s}
+.qrow:last-child{border-bottom:none}
+.qrow:hover{background:var(--surface)}
+.quav{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;flex-shrink:0}
+.qtc{display:flex;align-items:center;gap:8px;min-width:0}
+.qtxt{font-size:12.5px;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qc{font-size:12px;color:var(--mid)}
+.mtag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:500;white-space:nowrap}
+.mtag.cl{background:#EFF6FF;color:#1D4ED8}
+.mtag.gr{background:#EEF2FF;color:#4338CA}
+.mtag.gm{background:#FFF7ED;color:#C2410C}
+
+/* ── Permissions ── */
+.pbanner{background:linear-gradient(135deg,var(--navy) 0%,var(--navy3) 100%);border-radius:12px;padding:20px 24px;display:flex;gap:16px;position:relative;overflow:hidden}
+.pbanner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(14,165,233,.07) 1px,transparent 1px);background-size:22px 22px}
+.pbanner>*{position:relative;z-index:1}
+.pico{width:42px;height:42px;border-radius:11px;background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+.pt{font-size:14.5px;font-weight:600;color:#fff;margin-bottom:4px}
+.ps{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.6;max-width:580px}
+.ptable{background:var(--card);border:1px solid var(--borderL);border-radius:11px;overflow:hidden}
+.pthead{display:grid;grid-template-columns:2fr 1.2fr 75px 75px;padding:9px 18px;background:var(--surface);border-bottom:1px solid var(--borderL);font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.9px}
+.prow{display:grid;grid-template-columns:2fr 1.2fr 75px 75px;padding:11px 18px;border-bottom:1px solid var(--borderL);align-items:center}
+.prow:last-child{border-bottom:none}
+.prow:nth-child(even){background:var(--surface)}
+.pdoc{font-size:13px;font-weight:500;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pok{color:var(--green);font-size:15px;text-align:center}
+.pno{color:var(--red);font-size:15px;text-align:center}
+.steps{background:var(--card);border:1px solid var(--borderL);border-radius:11px;padding:20px}
+.stitle{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:14px}
+.step{display:flex;gap:12px;margin-bottom:14px}
+.step:last-child{margin-bottom:0}
+.snum{width:24px;height:24px;border-radius:7px;background:var(--navy2);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.sht{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:2px}
+.shd{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+/* ── Settings ── */
+.sw{padding:22px 26px;max-width:740px;display:flex;flex-direction:column;gap:18px}
+.ssec{background:var(--card);border:1px solid var(--borderL);border-radius:12px;overflow:hidden}
+.ssec-h{padding:14px 20px;border-bottom:1px solid var(--borderL);background:var(--surface)}
+.ssec-t{font-size:13px;font-weight:600;color:var(--dark)}
+.ssec-s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;border-bottom:1px solid var(--borderL);gap:14px}
+.srow:last-child{border-bottom:none}
+.sl{font-size:13px;font-weight:500;color:var(--dark)}
+.sh{font-size:11.5px;color:var(--muted);margin-top:2px}
+.tog{width:40px;height:22px;border-radius:11px;background:var(--borderL);cursor:pointer;position:relative;transition:background .2s;border:none;outline:none;flex-shrink:0}
+.tog.on{background:var(--teal)}
+.tog::after{content:'';width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tog.on::after{transform:translateX(18px)}
+.sinput{background:var(--surface);border:1px solid var(--borderL);border-radius:8px;padding:6px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--dark);outline:none;transition:all .15s;min-width:190px}
+.sinput:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,165,233,.08)}
+.tmember{display:flex;align-items:center;gap:11px;padding:11px 20px;border-bottom:1px solid var(--borderL)}
+.tmember:last-child{border-bottom:none}
+.tmav{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.tmn{font-size:13px;font-weight:500;color:var(--dark)}
+.tme{font-size:11.5px;color:var(--muted)}
+.role{margin-left:auto;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.role.admin{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.role.editor{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.role.viewer{background:var(--surface);color:var(--mid);border:1px solid var(--borderL)}
+
+/* ── Toast ── */
+.toasts{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:var(--dark);color:#fff;padding:10px 15px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,.2),0 0 0 1px rgba(255,255,255,.06);animation:tin .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tin{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.toast.out{animation:tout .2s var(--ease) forwards}
+@keyframes tout{to{opacity:0;transform:translateY(6px) scale(.97)}}
+.toast.g{background:#166534}.toast.a{background:#92400E}.toast.r{background:#991B1B}
+
+/* ── Command palette ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding-top:14vh;backdrop-filter:blur(3px);animation:fadein .15s var(--ease)}
+.ov.open{display:flex}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.cmdbox{background:var(--card);border:1px solid var(--borderL);border-radius:16px;width:540px;max-width:92vw;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.06);animation:cmdin .2s cubic-bezier(.34,1.1,.64,1)}
+@keyframes cmdin{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.cmdinr{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid var(--borderL)}
+.cmdi{flex:1;border:none;outline:none;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--dark);background:none}
+.cmdi::placeholder{color:var(--light)}
+.cmdres{max-height:300px;overflow-y:auto}
+.cdi{display:flex;align-items:center;gap:11px;padding:10px 16px;cursor:pointer;transition:background .1s}
+.cdi:hover,.cdi.sel{background:var(--surface)}
+.cdiico{width:28px;height:28px;border-radius:7px;background:var(--surface);border:1px solid var(--borderL);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.cdilbl{font-size:13px;color:var(--dark);font-weight:500}
+.cdisub{font-size:11px;color:var(--muted);margin-top:1px}
+.cmdftr{padding:9px 16px;border-top:1px solid var(--borderL);display:flex;gap:12px}
+.cfhint{font-size:11px;color:var(--light);display:flex;align-items:center;gap:5px}
+.cfhint kbd{font-family:'DM Mono',monospace;font-size:10px;background:var(--surface);border:1px solid var(--borderL);border-radius:4px;padding:1px 5px;color:var(--muted)}
+svg{display:block}button{font-family:inherit;outline:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar">
+  <div class="slogo">
+    <div class="slogo-row">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+        </svg>
+      </div>
+      <span class="logo-name">Aperintel</span>
+    </div>
+    <div class="logo-sub">A · P · ER · INTEL</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-section-lbl">Workspace</div>
+    <div class="ni on" data-v="chat" onclick="sv('chat')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      Ask Aperintel
+    </div>
+    <div class="ni" data-v="docs" onclick="sv('docs')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+      Document Library
+      <span class="ni-badge teal">821</span>
+    </div>
+    <div class="ni" data-v="agents" onclick="sv('agents')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/></svg></span>
+      AI Agents
+      <span class="ni-badge amber">3</span>
+    </div>
+  </div>
+
+  <div class="sdiv"></div>
+
+  <div class="nav-group">
+    <div class="nav-section-lbl">Intelligence</div>
+    <div class="ni" data-v="analytics" onclick="sv('analytics')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      Analytics
+    </div>
+    <div class="ni" data-v="connectors" onclick="sv('connectors')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+      Connectors
+      <span class="ni-badge teal">4</span>
+    </div>
+    <div class="ni" data-v="permissions" onclick="sv('permissions')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      Permissions
+    </div>
+  </div>
+
+  <div class="sdiv"></div>
+
+  <div class="nav-group">
+    <div class="nav-section-lbl">Account</div>
+    <div class="ni" data-v="settings" onclick="sv('settings')">
+      <span class="ni-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+      Settings
+    </div>
+  </div>
+
+  <div class="sfooter">
+    <div class="org-row" onclick="toast('Organisation settings coming soon','a')">
+      <div class="org-av">MC</div>
+      <div style="min-width:0">
+        <div class="org-name">Meridian Consulting</div>
+        <div class="org-tier">Professional · 11 users</div>
+      </div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" style="flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="tb-title">Ask Aperintel</div>
+      <div class="tb-sub" id="tb-sub">Knowledge workspace · Meridian Consulting</div>
+    </div>
+    <div class="tb-right">
+      <div class="cmd-trigger" onclick="openCmd()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Quick search...
+        <kbd>⌘K</kbd>
+      </div>
+      <div class="tb-pill green"><div class="blink"></div>4 syncing</div>
+      <div class="tb-pill blue">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        7 AI providers
+      </div>
+      <button class="tb-btn" onclick="toast('No new notifications','')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+      <button class="tb-btn" onclick="toast('Opening documentation…','')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Views -->
+  <div class="content">
+
+    <!-- CHAT -->
+    <div class="view on" id="v-chat">
+      <div class="chat">
+        <div class="chat-feed" id="feed">
+          <div class="welcome" id="welcome">
+            <!-- Custom SVG Brain Logo -->
+            <div class="brain-logo">
+              <div class="brain-ring"></div>
+              <div class="brain-ring2"></div>
+              <div class="brain-bg">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <defs>
+                    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#38BDF8"/>
+                      <stop offset="100%" stop-color="#0EA5E9"/>
+                    </linearGradient>
+                  </defs>
+                  <path stroke="url(#brainGrad)" d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+                  <path stroke="url(#brainGrad)" d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+                  <!-- Neural connection dots -->
+                  <circle cx="12" cy="8" r="0.8" fill="#38BDF8" opacity="0.6"/>
+                  <circle cx="12" cy="12" r="0.8" fill="#38BDF8" opacity="0.8"/>
+                  <circle cx="12" cy="16" r="0.8" fill="#38BDF8" opacity="0.6"/>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="w-title">Ask your knowledge base anything</div>
+              <div class="w-sub" style="margin-top:8px">Aperintel searches across all your connected sources and returns cited answers grounded entirely in your own documents. Permissions enforced on every query.</div>
+            </div>
+            <div class="sugs">
+              <div class="sug" onclick="sc(this.textContent)">How many employees are in the HR department?</div>
+              <div class="sug" onclick="sc(this.textContent)">Summarise the Meridian Group proposal risks</div>
+              <div class="sug" onclick="sc(this.textContent)">What is our notice period for senior employees?</div>
+              <div class="sug" onclick="sc(this.textContent)">What were the Q3 2024 revenue figures?</div>
+              <div class="sug" onclick="sc(this.textContent)">What was discussed in last week's team meeting?</div>
+              <div class="sug" onclick="sc(this.textContent)">What is our maternity leave policy?</div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-bottom">
+          <div class="chat-box">
+            <textarea class="chat-ta" id="cta" rows="1" placeholder="Ask a question about your documents…" onkeydown="ck(event)" oninput="ar(this)"></textarea>
+            <button class="sbtn" id="sbtn" onclick="sc()" disabled>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="chat-foot">
+            <div class="chat-hint">Answers grounded in your documents · Cited · Permissions enforced</div>
+            <div class="kbs"><span class="kb"><kbd>Enter</kbd> send</span><span class="kb"><kbd>Shift+Enter</kbd> newline</span><span class="kb"><kbd>/</kbd> focus</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCS -->
+    <div class="view" id="v-docs">
+      <div class="wrap">
+        <div class="sec-hdr">
+          <div><div class="sec-t">Document Library</div><div class="sec-s">All indexed documents across connected sources</div></div>
+          <div class="toolbar">
+            <div class="srch"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="dsrch" placeholder="Search documents…" oninput="fd()"></div>
+            <div class="chips">
+              <div class="chip on" data-f="all" onclick="sf('all',this)">All</div>
+              <div class="chip" data-f="sharepoint" onclick="sf('sharepoint',this)">SharePoint</div>
+              <div class="chip" data-f="onedrive" onclick="sf('onedrive',this)">OneDrive</div>
+              <div class="chip" data-f="teams" onclick="sf('teams',this)">Teams</div>
+              <div class="chip" data-f="gdrive" onclick="sf('gdrive',this)">Google Drive</div>
+            </div>
+          </div>
+        </div>
+        <div class="sstrip">
+          <div class="sstat"><div class="sstat-v" id="ss-chunks">821</div><div class="sstat-l">Total chunks</div></div>
+          <div class="sstat"><div class="sstat-v" id="ss-docs">9</div><div class="sstat-l">Documents</div></div>
+          <div class="sstat"><div class="sstat-v" id="ss-idx">7</div><div class="sstat-l">Indexed</div></div>
+          <div class="sstat"><div class="sstat-v">4</div><div class="sstat-l">Sources</div></div>
+          <div class="sstat"><div class="sstat-v" style="color:var(--amber)">1</div><div class="sstat-l">Processing</div></div>
+          <div class="sstat"><div class="sstat-v" style="color:var(--red)">1</div><div class="sstat-l">Errors</div></div>
+        </div>
+        <div class="dtable">
+          <div class="dhead"><div>Document</div><div>Source</div><div>Chunks</div><div>Status</div><div>Size</div></div>
+          <div id="dtbody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="view" id="v-agents">
+      <div class="wrap">
+        <div class="sec-hdr"><div><div class="sec-t">AI Agents</div><div class="sec-s">Automated intelligence workflows</div></div></div>
+        <div class="cgrid" id="agrid"></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="view" id="v-analytics">
+      <div class="wrap">
+        <div class="sec-hdr"><div><div class="sec-t">Analytics</div><div class="sec-s">Week of 18–24 Nov 2024 · Meridian Consulting</div></div></div>
+        <div class="agrid">
+          <div class="acard"><div class="acard-l">Queries this week</div><div class="acard-v">284</div><div class="acard-c up">↑ 38 vs last week</div></div>
+          <div class="acard"><div class="acard-l">Avg response time</div><div class="acard-v">1.2s</div><div class="acard-c flat">p95: 2.8s</div></div>
+          <div class="acard"><div class="acard-l">AI inference cost</div><div class="acard-v">£4.12</div><div class="acard-c up">84% below GPT-4o only</div></div>
+          <div class="acard"><div class="acard-l">Avg confidence</div><div class="acard-v">91%</div><div class="acard-c up">↑ 3pp vs last week</div></div>
+        </div>
+        <div class="crow">
+          <div class="chart-c"><div class="ct">Most Referenced Documents</div><div class="cs">Query count this week</div><div class="bars" id="dbars"></div></div>
+          <div class="chart-c">
+            <div class="ct">Model Routing</div><div class="cs">Traffic distribution</div>
+            <div class="bars" id="mbars"></div>
+            <div class="mini">
+              <div class="mrow"><span class="ml">Cost vs GPT-4o only</span><span class="mv" style="color:var(--green)">−84%</span></div>
+              <div class="mrow"><span class="ml">Chunks indexed</span><span class="mv">821</span></div>
+              <div class="mrow"><span class="ml">Active users</span><span class="mv">11</span></div>
+              <div class="mrow"><span class="ml">Avg citations / answer</span><span class="mv">2.3</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="qtable">
+          <div class="qhead"><div>Query</div><div>User</div><div>Model</div><div>Time</div><div>Cost</div></div>
+          <div id="qlog"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTORS -->
+    <div class="view" id="v-connectors">
+      <div class="wrap">
+        <div class="sec-hdr"><div><div class="sec-t">Source Connectors</div><div class="sec-s">Permissions mirrored automatically · Delta sync every 15 min</div></div></div>
+        <div class="cgrid" id="cgrid"></div>
+      </div>
+    </div>
+
+    <!-- PERMISSIONS -->
+    <div class="view" id="v-permissions">
+      <div class="wrap">
+        <div class="pbanner">
+          <div class="pico">🔐</div>
+          <div>
+            <div class="pt">Source-System Permission Mirroring</div>
+            <div class="ps">Permissions from SharePoint, OneDrive, Teams and Google Drive are captured at ingestion time and stored on every document chunk. Users can only retrieve documents they're already authorised to see in the source — enforced at database query level, not application logic.</div>
+          </div>
+        </div>
+        <div class="sec-t">Document Access Matrix</div>
+        <div class="ptable">
+          <div class="pthead"><div>Document</div><div>Access Scope</div><div style="text-align:center">Partners</div><div style="text-align:center">All Staff</div></div>
+          <div id="prows"></div>
+        </div>
+        <div class="steps">
+          <div class="stitle">How Permission Mirroring Works</div>
+          <div class="step"><div class="snum">1</div><div><div class="sht">Permissions fetched at ingestion</div><div class="shd">When a document is ingested, the connector calls the source system's permissions API (e.g. Microsoft Graph /permissions endpoint) and retrieves the complete list of users and groups authorised to access that document.</div></div></div>
+          <div class="step"><div class="snum">2</div><div><div class="sht">Scope stored on every chunk</div><div class="shd">Every chunk produced from a document is tagged with a permission_scope array containing authorised user IDs and group IDs. This is stored alongside the vector embedding in pgvector.</div></div></div>
+          <div class="step"><div class="snum">3</div><div><div class="sht">Hard pre-filter at query time</div><div class="shd">Before any vector similarity search occurs, the retrieval pipeline filters the index to only chunks where the requesting user's ID or group memberships intersect with permission_scope. Applied at database level — no bypass path exists.</div></div></div>
+          <div class="step"><div class="snum">4</div><div><div class="sht">Delta sync every 15 minutes</div><div class="shd">Permission changes in the source are automatically reflected. When a user is removed from a SharePoint group, the next delta sync updates permission_scope on all affected chunks with no manual intervention.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="v-settings">
+      <div class="sw">
+        <div class="sec-hdr"><div><div class="sec-t">Settings</div><div class="sec-s">Organisation and workspace configuration</div></div></div>
+        <div class="ssec">
+          <div class="ssec-h"><div class="ssec-t">Organisation</div><div class="ssec-s">Workspace identity and plan details</div></div>
+          <div class="srow"><div><div class="sl">Organisation name</div><div class="sh">Displayed across the workspace</div></div><input class="sinput" value="Meridian Consulting"></div>
+          <div class="srow"><div><div class="sl">Plan</div><div class="sh">Current subscription tier</div></div><span class="badge ok" style="font-size:12px">Professional</span></div>
+          <div class="srow"><div><div class="sl">AI providers</div><div class="sh">All 7 configured and routing</div></div><span class="badge ok" style="font-size:12px">7 active</span></div>
+          <div class="srow"><div><div class="sl">Data residency</div><div class="sh">Where your data is processed</div></div><span style="background:#F5F3FF;color:#5B21B6;border:1px solid #DDD6FE;font-size:12px;padding:3px 9px;border-radius:20px;font-weight:500">EU West · London</span></div>
+        </div>
+        <div class="ssec">
+          <div class="ssec-h"><div class="ssec-t">Notifications</div></div>
+          <div class="srow"><div><div class="sl">Ingestion complete</div><div class="sh">When a document batch finishes indexing</div></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+          <div class="srow"><div><div class="sl">Low confidence answers</div><div class="sh">Alert when confidence drops below 70%</div></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+          <div class="srow"><div><div class="sl">Connector sync errors</div><div class="sh">When a delta sync fails or goes offline</div></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+          <div class="srow"><div><div class="sl">Weekly usage digest</div><div class="sh">Summary of queries, cost, and top documents</div></div><button class="tog" onclick="this.classList.toggle('on')"></button></div>
+        </div>
+        <div class="ssec">
+          <div class="ssec-h"><div class="ssec-t">AI Behaviour</div></div>
+          <div class="srow"><div><div class="sl">Enforce citation on every response</div><div class="sh">Responses without a source document are blocked</div></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+          <div class="srow"><div><div class="sl">Confidence threshold</div><div class="sh">Flag responses below this for human review</div></div><input class="sinput" value="70%" style="min-width:80px;max-width:80px"></div>
+          <div class="srow"><div><div class="sl">Default AI model</div><div class="sh">Primary model for document analysis</div></div>
+            <select class="sinput"><option>Claude 3.5 Sonnet (recommended)</option><option>GPT-4o</option><option>Groq Llama 3.3 70B</option><option>Gemini 2.0 Flash</option></select>
+          </div>
+          <div class="srow"><div><div class="sl">Cost-aware routing</div><div class="sh">Route to lower-cost models for simple queries</div></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+        </div>
+        <div class="ssec">
+          <div class="ssec-h"><div class="ssec-t">Team</div><div class="ssec-s">11 members · Professional plan allows up to 25</div></div>
+          <div id="tlist"></div>
+          <div class="srow"><button onclick="toast('Invite sent successfully','g')" style="background:var(--navy2);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .14s" onmouseover="this.style.background='var(--navyH)'" onmouseout="this.style.background='var(--navy2)'">+ Invite team member</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- Toasts -->
+<div class="toasts" id="toasts"></div>
+
+<!-- Command Palette -->
+<div class="ov" id="ov" onclick="cc(event)">
+  <div class="cmdbox">
+    <div class="cmdinr">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="cmdi" id="cmdi" placeholder="Search views, documents, queries…" oninput="fc()" onkeydown="kc(event)" autocomplete="off">
+    </div>
+    <div class="cmdres" id="cmdres"></div>
+    <div class="cmdftr">
+      <span class="cfhint"><kbd>↑↓</kbd> navigate</span>
+      <span class="cfhint"><kbd>Enter</kbd> select</span>
+      <span class="cfhint"><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────
+const DOCS=[
+  {id:1,name:"Q3 2024 Management Report.docx",path:"SharePoint / Finance",src:"sharepoint",type:"docx",chunks:184,size:"1.2 MB",status:"indexed"},
+  {id:2,name:"Client Proposal — Meridian Group.docx",path:"OneDrive / Proposals",src:"onedrive",type:"docx",chunks:122,size:"890 KB",status:"indexed"},
+  {id:3,name:"Employment Contracts Template.pdf",path:"SharePoint / HR / Templates",src:"sharepoint",type:"pdf",chunks:67,size:"340 KB",status:"indexed"},
+  {id:4,name:"HR Policy Manual 2024.pdf",path:"SharePoint / HR",src:"sharepoint",type:"pdf",chunks:98,size:"510 KB",status:"indexed"},
+  {id:5,name:"HR Department Headcount 2024.xlsx",path:"SharePoint / HR / Reports",src:"sharepoint",type:"xlsx",chunks:22,size:"88 KB",status:"indexed"},
+  {id:6,name:"Team Meeting Notes — Nov 2024.docx",path:"Teams / General",src:"teams",type:"docx",chunks:28,size:"85 KB",status:"processing"},
+  {id:7,name:"Brand Guidelines v3.pdf",path:"SharePoint / Marketing",src:"sharepoint",type:"pdf",chunks:91,size:"4.1 MB",status:"indexed"},
+  {id:8,name:"Vendor Contracts 2024.pdf",path:"OneDrive / Legal",src:"onedrive",type:"pdf",chunks:156,size:"2.8 MB",status:"error"},
+  {id:9,name:"Market Analysis — UK PropTech.pptx",path:"SharePoint / Research",src:"sharepoint",type:"pptx",chunks:203,size:"6.2 MB",status:"indexed"},
+];
+const CONNS=[
+  {id:"sp",name:"SharePoint Online",icon:"📄",phase:"Phase 1.5 — Live",live:true,docs:342,sync:"2 min ago",desc:"All document libraries, pages and lists. OAuth 2.0 via Microsoft Graph API.",bg:"#E8F4FD"},
+  {id:"od",name:"OneDrive for Business",icon:"☁️",phase:"Phase 1.5 — Live",live:true,docs:218,sync:"2 min ago",desc:"All folders and files the user has access to. Shared consent flow with SharePoint.",bg:"#EDF4FE"},
+  {id:"teams",name:"Microsoft Teams",icon:"💬",phase:"Phase 1.5 — Live",live:true,docs:94,sync:"14 min ago",desc:"Meeting transcripts, shared files, channel docs. Channel member permissions preserved.",bg:"#EDE9FE"},
+  {id:"gdrive",name:"Google Drive",icon:"📁",phase:"Phase 1.5 — Live",live:true,docs:167,sync:"7 min ago",desc:"All shared drives and My Drive. Permissions mirrored via Google Drive API.",bg:"#FEF3C7"},
+  {id:"outlook",name:"Outlook / Exchange",icon:"📧",phase:"Phase 2",live:false,av:true,docs:0,sync:"—",desc:"Client emails and attachments with explicit per-user consent.",bg:"#FEF2F2"},
+  {id:"dynamics",name:"Dynamics 365",icon:"📊",phase:"Phase 2",live:false,av:true,docs:0,sync:"—",desc:"CRM contacts, accounts, opportunities and case records.",bg:"#F0FDF4"},
+  {id:"slack",name:"Slack",icon:"#️⃣",phase:"Phase 2",live:false,av:true,docs:0,sync:"—",desc:"Public channel messages and shared files with permission mirroring.",bg:"#FFF7ED"},
+  {id:"notion",name:"Notion",icon:"📝",phase:"Phase 3",live:false,av:false,docs:0,sync:"—",desc:"Pages, databases and comments. Coming in Phase 3.",bg:"#F8FAFC"},
+];
+const AGENTS=[
+  {name:"Proposal Generator",icon:"✍️",on:true,desc:"Drafts client proposals using past work from your document library via Claude 3.5. Requires human review before output.",runs:12,last:"3 hrs ago",model:"Claude 3.5"},
+  {name:"Meeting Intelligence",icon:"🎙️",on:true,desc:"Processes Teams meeting transcripts, extracts action items, decisions and summaries within 5 minutes of availability.",runs:28,last:"1 day ago",model:"Groq Llama 3"},
+  {name:"Contract Radar",icon:"📋",on:false,desc:"Scans contracts for key clauses, obligations and deadlines. Builds a searchable clause register and flags anomalies.",runs:5,last:"3 days ago",model:"Claude 3.5"},
+];
+const TEAM=[
+  {init:"SH",name:"Sarah Hammond",email:"s.hammond@meridian.co.uk",role:"admin",col:"#0EA5E9"},
+  {init:"JT",name:"James Thompson",email:"j.thompson@meridian.co.uk",role:"editor",col:"#10B981"},
+  {init:"PM",name:"Priya Mehta",email:"p.mehta@meridian.co.uk",role:"editor",col:"#8B5CF6"},
+  {init:"AR",name:"Alex Reynolds",email:"a.reynolds@meridian.co.uk",role:"viewer",col:"#F59E0B"},
+  {init:"OC",name:"Olivia Chen",email:"o.chen@meridian.co.uk",role:"viewer",col:"#EF4444"},
+];
+const PERMS=[
+  {doc:"Client Proposal — Meridian Group.docx",scope:"Partners only",p:true,a:false},
+  {doc:"Q3 2024 Management Report.docx",scope:"Finance team",p:true,a:false},
+  {doc:"HR Department Headcount 2024.xlsx",scope:"HR + Partners",p:true,a:false},
+  {doc:"Employment Contracts Template.pdf",scope:"HR + Partners",p:true,a:false},
+  {doc:"Brand Guidelines v3.pdf",scope:"All staff",p:true,a:true},
+  {doc:"Team Meeting Notes — Nov 2024.docx",scope:"All staff",p:true,a:true},
+  {doc:"Market Analysis — UK PropTech.pptx",scope:"All staff",p:true,a:true},
+];
+const QA=[
+  {k:["hr","human resource","headcount","how many employ","staff number","people in hr","hr department","employees in hr","hr team","hr count"],model:"Claude 3.5",cost:"£0.004",ms:1180,cits:[{doc:"HR Department Headcount 2024.xlsx",pg:1},{doc:"HR Policy Manual 2024.pdf",pg:3}],conf:92,ans:"According to the <strong>HR Department Headcount 2024</strong> spreadsheet, the HR department currently has <strong>8 employees</strong>: 1 HR Director, 2 HR Business Partners, 2 HR Coordinators, 1 Payroll Specialist, 1 L&D Manager, and 1 Recruitment Specialist. Total company headcount is 127 as of Q3 2024."},
+  {k:["notice","resign","termination","leaving","senior employ"],model:"Claude 3.5",cost:"£0.003",ms:1240,cits:[{doc:"Employment Contracts Template.pdf",pg:3},{doc:"HR Policy Manual 2024.pdf",pg:12}],conf:94,ans:"The standard notice period for senior employees (Band 4 and above) is <strong>3 months</strong>, extendable to 6 months for C-suite roles. Defined in Section 4.2 of your Employment Contracts Template and cross-referenced in the HR Policy Manual."},
+  {k:["meridian","proposal","risk","client proposal"],model:"Claude 3.5",cost:"£0.008",ms:1890,cits:[{doc:"Client Proposal — Meridian Group.docx",pg:7},{doc:"Client Proposal — Meridian Group.docx",pg:14}],conf:89,ans:"The Meridian Group proposal identifies three key risks:<br><br><strong>1. Data migration complexity</strong> — legacy ERP with 8+ years of unstructured data requiring significant cleansing.<br><strong>2. Stakeholder alignment</strong> — CTO and COO have divergent priorities around timeline vs. features.<br><strong>3. Budget exposure</strong> — the £120K contingency may be insufficient given integration complexity."},
+  {k:["meeting","last week","team meeting","what was discussed","nov"],model:"Groq Llama 3",cost:"£0.001",ms:680,cits:[{doc:"Team Meeting Notes — Nov 2024.docx",pg:1}],conf:96,ans:"The 14 November team meeting covered: <strong>Q3 Financials</strong> (margin 34%, 2pp ahead of budget), <strong>New Hires</strong> (two senior consultants joining January), <strong>Meridian Update</strong> (proposal submitted, awaiting sign-off), and <strong>Office Move</strong> (March confirmed, £85K fit-out approved)."},
+  {k:["maternity","paternity","parental","pregnancy","baby","child leave"],model:"Claude 3.5",cost:"£0.003",ms:1050,cits:[{doc:"HR Policy Manual 2024.pdf",pg:18}],conf:91,ans:"Per HR Policy Manual Section 7.2:<br><br><strong>Maternity leave:</strong> 52 weeks total — first 26 at full enhanced pay, next 26 at statutory rate. 26+ weeks service required. Apply at least 15 weeks before due date.<br><strong>Paternity leave:</strong> 2 weeks at full pay within 56 days of birth.<br><strong>Shared parental leave</strong> available after curtailing maternity entitlement."},
+  {k:["q3","quarter","revenue","financial","finance","margin","profit"],model:"Groq Llama 3",cost:"£0.002",ms:720,cits:[{doc:"Q3 2024 Management Report.docx",pg:2},{doc:"Q3 2024 Management Report.docx",pg:5}],conf:93,ans:"Q3 2024 highlights:<br><br><strong>Revenue:</strong> £2.4M (↑12% vs Q3 2023, ahead of £2.2M budget).<br><strong>Gross Margin:</strong> 34% (↑2pp vs budget).<br><strong>EBITDA:</strong> £310K.<br><strong>Mix:</strong> Consulting 58%, Advisory 27%, Technology 15%.<br><strong>Headcount:</strong> 127 (+4). Opex 6% under budget."},
+  {k:["brand","logo","colour","color","font","typography","design guide"],model:"Gemini 2.0 Flash",cost:"£0.001",ms:590,cits:[{doc:"Brand Guidelines v3.pdf",pg:1}],conf:88,ans:"Brand Guidelines v3: <strong>Primary colour</strong> Navy #0D2B5E, accent Teal #00B4D8. <strong>Typography:</strong> Söhne headings, DM Sans body. <strong>Logo:</strong> 24px minimum clear space, white reversed on dark backgrounds. Full assets on page 4."},
+];
+const FB={model:"Groq Llama 3",cost:"£0.001",ms:510,cits:[],conf:0,warn:true,ans:"No matching information found in your indexed documents. This prototype has a curated demo set. In production, Aperintel would search all indexed content across SharePoint, OneDrive, Teams and Google Drive. Try asking about HR headcount, the Meridian proposal, Q3 financials, notice periods, or team meetings."};
+
+// ── View meta ─────────────────────────────────────────────────────
+const VM={chat:["Ask Aperintel","Knowledge workspace · Meridian Consulting"],docs:["Document Library","821 chunks across 4 connected sources"],agents:["AI Agents","3 configured · 2 active"],analytics:["Analytics","Week 18–24 Nov 2024"],connectors:["Source Connectors","4 live · syncing every 15 min"],permissions:["Permissions","Source-system permission mirroring"],settings:["Settings","Organisation & workspace configuration"]};
+
+// ── State ────────────────────────────────────────────────────────
+let df="all",busy=false,cSel=0,fCmds=[];
+const connLive={sp:true,od:true,teams:true,gdrive:true,outlook:false,dynamics:false,slack:false,notion:false};
+
+// ── Switch view ──────────────────────────────────────────────────
+function sv(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('v-'+id).classList.add('on');
+  document.querySelector(`[data-v="${id}"]`).classList.add('on');
+  const m=VM[id]||[id,''];
+  document.getElementById('tb-title').textContent=m[0];
+  document.getElementById('tb-sub').textContent=m[1];
+  if(id==='analytics') setTimeout(animBars,150);
+}
+
+// ── Doc icon ─────────────────────────────────────────────────────
+function dic(type){const m={docx:{bg:"#EBF4FF",e:"📄"},pdf:{bg:"#FEF2F2",e:"📋"},xlsx:{bg:"#F0FDF4",e:"📊"},pptx:{bg:"#FFF7ED",e:"📑"}}[type]||{bg:"#F8FAFC",e:"📄"};return`<div class="dic" style="background:${m.bg}">${m.e}</div>`}
+
+// ── Render docs ──────────────────────────────────────────────────
+function rd(){
+  const q=(document.getElementById('dsrch')||{}).value||'';
+  const rows=DOCS.filter(d=>(df==='all'||d.src===df)&&(!q||d.name.toLowerCase().includes(q.toLowerCase())));
+  document.getElementById('dtbody').innerHTML=rows.map(d=>`
+    <div class="drow" onclick="toast('Opening ${d.name}…','')">
+      <div class="dnc">${dic(d.type)}<div style="min-width:0"><div class="dnt">${d.name}</div><div class="dp">${d.path}</div></div></div>
+      <div class="dc" style="text-transform:capitalize">${d.src}</div>
+      <div class="dc m">${d.status==='indexed'?d.chunks:'—'}</div>
+      <div><span class="badge ${d.status==='indexed'?'ok':d.status==='processing'?'pr':'er'}">${d.status==='indexed'?'✓ Indexed':d.status==='processing'?'⟳ Processing':'✗ Error'}</span></div>
+      <div class="dc">${d.size}</div>
+    </div>`).join('');
+}
+function fd(){rd()}
+function sf(f,el){df=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');rd()}
+
+// ── Render connectors ────────────────────────────────────────────
+function rc(){
+  document.getElementById('cgrid').innerHTML=CONNS.map(c=>{
+    const live=connLive[c.id];
+    const pill=live?`<span class="cpill live">● Live</span>`:c.av?`<span class="cpill av">Available</span>`:`<span class="cpill soon">Phase 3</span>`;
+    const stats=live?`<div class="cc-stats"><div class="ccs"><strong>${c.docs}</strong> docs</div><div class="ccs">Synced <strong>${c.sync}</strong></div></div>`:'';
+    const perm=live?`<div class="cc-perm"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="cc-perm-t">Permissions mirrored</span></div>`:'';
+    const btn=live?`<button class="cbtn mgd" onclick="toast('Managing ${c.name}…','')">Manage connection</button>`:c.av?`<button class="cbtn go" onclick="conn('${c.id}','${c.name}')">Connect ${c.name}</button>`:`<button class="cbtn no">Coming Phase 3</button>`;
+    return`<div class="cc ${live?'live':''}"><div class="cc-top"><div class="cc-logo" style="background:${c.bg}">${c.icon}</div>${pill}</div><div class="cc-name">${c.name}</div><div class="cc-phase">${c.phase}</div><div class="cc-desc">${c.desc}</div>${stats}${perm}${btn}</div>`;
+  }).join('');
+}
+function conn(id,name){connLive[id]=true;toast(`${name} connected`,'g');rc()}
+
+// ── Render agents ────────────────────────────────────────────────
+function ra(){
+  document.getElementById('agrid').innerHTML=AGENTS.map(a=>`
+    <div class="cc ${a.on?'live':''}">
+      <div class="cc-top"><div class="cc-logo" style="background:#F0F9FF;font-size:19px">${a.icon}</div><span class="cpill ${a.on?'live':'av'}">${a.on?'● Active':'Paused'}</span></div>
+      <div class="cc-name">${a.name}</div><div class="cc-phase">Model: ${a.model}</div>
+      <div class="cc-desc">${a.desc}</div>
+      <div class="cc-stats"><div class="ccs"><strong>${a.runs}</strong> runs</div><div class="ccs">Last: <strong>${a.last}</strong></div></div>
+      <button class="cbtn ${a.on?'mgd':'go'}" onclick="toast('${a.on?'Agent paused':'Agent resumed'}','${a.on?'a':'g'}')">${a.on?'Pause agent':'Resume agent'}</button>
+    </div>`).join('');
+}
+
+// ── Render analytics ─────────────────────────────────────────────
+function ran(){
+  const db=[{n:"HR Policy Manual",q:47,p:87},{n:"Meridian Proposal",q:38,p:70},{n:"Q3 Report",q:31,p:57},{n:"HR Headcount",q:24,p:44},{n:"Brand Guidelines",q:18,p:33}];
+  const mb=[{n:"Claude 3.5",p:52,c:"#0EA5E9"},{n:"Groq Llama 3",p:31,c:"#4338CA"},{n:"Gemini 2.0",p:12,c:"#F59E0B"},{n:"GPT-4o",p:5,c:"#10B981"}];
+  document.getElementById('dbars').innerHTML=db.map(b=>`<div class="brow"><div class="blbl">${b.n}</div><div class="btrk"><div class="bfil" style="width:0%;background:var(--teal)" data-w="${b.p}"></div></div><div class="bval">${b.q}</div></div>`).join('');
+  document.getElementById('mbars').innerHTML=mb.map(b=>`<div class="brow"><div class="blbl">${b.n}</div><div class="btrk"><div class="bfil" style="width:0%;background:${b.c}" data-w="${b.p}"></div></div><div class="bval">${b.p}%</div></div>`).join('');
+  const ql=[{q:"How many employees are in HR?",u:"SH",uc:"#0EA5E9",m:"Claude 3.5",mt:"cl",ms:"1,180ms",c:"£0.004"},{q:"What is our notice period for seniors?",u:"JT",uc:"#10B981",m:"Claude 3.5",mt:"cl",ms:"1,240ms",c:"£0.003"},{q:"Summarise Meridian proposal risks",u:"SH",uc:"#0EA5E9",m:"Claude 3.5",mt:"cl",ms:"1,890ms",c:"£0.008"},{q:"Q3 revenue figures",u:"PM",uc:"#8B5CF6",m:"Groq Llama 3",mt:"gr",ms:"720ms",c:"£0.002"},{q:"Last week's team meeting?",u:"AR",uc:"#F59E0B",m:"Groq Llama 3",mt:"gr",ms:"680ms",c:"£0.001"},{q:"What are our brand colours?",u:"OC",uc:"#EF4444",m:"Gemini 2.0",mt:"gm",ms:"590ms",c:"£0.001"}];
+  document.getElementById('qlog').innerHTML=ql.map(r=>`<div class="qrow"><div class="qtc"><div class="quav" style="background:${r.uc}">${r.u}</div><div class="qtxt">${r.q}</div></div><div class="qc">${r.u}</div><div><span class="mtag ${r.mt}">${r.m}</span></div><div class="qc">${r.ms}</div><div class="qc" style="color:var(--green)">${r.c}</div></div>`).join('');
+}
+function animBars(){document.querySelectorAll('.bfil[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%'})}
+
+// ── Render permissions ────────────────────────────────────────────
+function rp(){
+  document.getElementById('prows').innerHTML=PERMS.map((r,i)=>`<div class="prow" style="background:${i%2?'var(--surface)':'var(--card)'}"><div class="pdoc">${r.doc}</div><div><span class="badge ok" style="font-size:11px">${r.scope}</span></div><div class="${r.p?'pok':'pno'}" style="text-align:center">${r.p?'✓':'✗'}</div><div class="${r.a?'pok':'pno'}" style="text-align:center">${r.a?'✓':'✗'}</div></div>`).join('');
+}
+
+// ── Render team ───────────────────────────────────────────────────
+function rt(){
+  document.getElementById('tlist').innerHTML=TEAM.map(m=>`<div class="tmember"><div class="tmav" style="background:${m.col}">${m.init}</div><div><div class="tmn">${m.name}</div><div class="tme">${m.email}</div></div><span class="role ${m.role}">${m.role.charAt(0).toUpperCase()+m.role.slice(1)}</span></div>`).join('');
+}
+
+// ── Chat ──────────────────────────────────────────────────────────
+function mQA(text){const q=text.toLowerCase();for(const e of QA)if(e.k.some(k=>q.includes(k)))return e;return FB}
+
+function ar(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,110)+'px';document.getElementById('sbtn').disabled=!ta.value.trim()}
+function ck(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sc()}}
+
+async function sc(txt){
+  if(busy)return;
+  const ta=document.getElementById('cta');
+  const q=(txt||ta.value).trim();if(!q)return;
+  const w=document.getElementById('welcome');if(w)w.style.display='none';
+  addMsg('u',q,null);
+  ta.value='';ta.style.height='auto';document.getElementById('sbtn').disabled=true;
+  busy=true;
+  const tid='t'+Date.now();
+  const feed=document.getElementById('feed');
+  feed.insertAdjacentHTML('beforeend',`<div class="msg ai" id="${tid}"><div class="av ai">A</div><div class="mbody"><div class="bubble"><div class="typing-ind"><span></span><span></span><span></span></div></div></div></div>`);
+  scrollF();
+  await new Promise(r=>setTimeout(r,900+Math.random()*600));
+  const el=document.getElementById(tid);if(el)el.remove();
+  const qa=mQA(q);
+  addMsg('ai',qa.ans,qa);
+  busy=false;
+}
+
+function addMsg(role,text,qa){
+  const feed=document.getElementById('feed');
+  const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  let inner='';
+  if(role==='ai'&&qa){
+    const cits=qa.cits&&qa.cits.length?`<div class="cits">${qa.cits.map(c=>`<div class="cit" onclick="toast('Opening ${c.doc}, page ${c.pg}…','')"><div class="cdot"></div>${c.doc} · p.${c.pg}</div>`).join('')}</div>`:'';
+    const cbar=qa.conf>0?`<div class="cbar"><span class="cbar-lbl">Confidence</span><div class="cbar-track"><div class="cbar-fill" style="width:0%" data-w="${qa.conf}"></div></div><span class="cbar-pct">${qa.conf}%</span></div>`:'';
+    const meta=`<div class="mmeta"><span class="mchip">${qa.model}</span><span class="mchip ms">${qa.ms}ms</span><span class="mchip cost">${qa.cost}</span></div>`;
+    inner=`<div class="av ai">A</div><div class="mbody"><div class="bubble${qa.warn?' warn':''}">${text}</div>${cits}${cbar}${meta}<div class="mtime">${ts}</div></div>`;
+  } else {
+    inner=`<div class="av u">Y</div><div class="mbody"><div class="bubble">${text}</div><div class="mtime">${ts}</div></div>`;
+  }
+  const d=document.createElement('div');d.className=`msg ${role}`;d.innerHTML=inner;
+  feed.appendChild(d);
+  setTimeout(()=>{d.querySelectorAll('.cbar-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%'})},80);
+  scrollF();
+}
+function scrollF(){const f=document.getElementById('feed');if(f)requestAnimationFrame(()=>{f.scrollTop=f.scrollHeight})}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg,type=''){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');t.className=`toast ${type}`;
+  const ico={g:'✓',a:'⚠',r:'✗'}[type]||'ℹ';
+  t.innerHTML=`<span>${ico}</span>${msg}`;c.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),250)},2800);
+}
+
+// ── Command palette ───────────────────────────────────────────────
+const CMDS=[
+  {l:"Ask Aperintel",s:"Open the knowledge chat",i:"💬",fn:()=>sv('chat')},
+  {l:"Document Library",s:"Browse indexed documents",i:"📄",fn:()=>sv('docs')},
+  {l:"AI Agents",s:"Manage automated workflows",i:"⚡",fn:()=>sv('agents')},
+  {l:"Analytics",s:"Usage and cost dashboard",i:"📊",fn:()=>sv('analytics')},
+  {l:"Connectors",s:"Manage source connections",i:"🔗",fn:()=>sv('connectors')},
+  {l:"Permissions",s:"Source-system permission mirroring",i:"🔐",fn:()=>sv('permissions')},
+  {l:"Settings",s:"Workspace configuration",i:"⚙️",fn:()=>sv('settings')},
+  {l:"How many employees in HR?",s:"Ask this question",i:"❓",fn:()=>{oc();sv('chat');setTimeout(()=>sc("How many employees are in the HR department?"),200)}},
+  {l:"Q3 revenue figures",s:"Ask this question",i:"❓",fn:()=>{oc();sv('chat');setTimeout(()=>sc("What were the Q3 2024 revenue figures?"),200)}},
+];
+function oc(){document.getElementById('ov').classList.add('open');document.getElementById('cmdi').value='';cSel=0;fCmds=[...CMDS];rCmd();setTimeout(()=>document.getElementById('cmdi').focus(),50)}
+function cc(e){if(!e||e.target===document.getElementById('ov'))document.getElementById('ov').classList.remove('open')}
+function fc(){const q=document.getElementById('cmdi').value.toLowerCase();fCmds=CMDS.filter(c=>c.l.toLowerCase().includes(q)||c.s.toLowerCase().includes(q));cSel=0;rCmd()}
+function rCmd(){document.getElementById('cmdres').innerHTML=fCmds.map((c,i)=>`<div class="cdi ${i===cSel?'sel':''}" onmouseenter="cSel=${i};rCmd()" onclick="xCmd(${i})"><div class="cdiico">${c.i}</div><div><div class="cdilbl">${c.l}</div><div class="cdisub">${c.s}</div></div></div>`).join('')||'<div style="padding:18px;text-align:center;color:var(--light);font-size:13px">No results</div>'}
+function xCmd(i){const c=fCmds[i];if(c){cc(null);c.fn()}}
+function kc(e){if(e.key==='ArrowDown'){cSel=Math.min(cSel+1,fCmds.length-1);rCmd();e.preventDefault()}else if(e.key==='ArrowUp'){cSel=Math.max(cSel-1,0);rCmd();e.preventDefault()}else if(e.key==='Enter')xCmd(cSel);else if(e.key==='Escape')cc(null)}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();oc()}
+  if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();sv('chat');setTimeout(()=>document.getElementById('cta').focus(),80)}
+  if(e.key==='Escape')cc(null)
+});
+
+// ── Observer for analytics bars ───────────────────────────────────
+new MutationObserver(()=>{if(document.getElementById('v-analytics').classList.contains('on'))animBars()})
+  .observe(document.getElementById('v-analytics'),{attributes:true,attributeFilter:['class']});
+
+// ── Init ──────────────────────────────────────────────────────────
+rd();rc();ra();ran();rp();rt();
+setTimeout(()=>toast('4 sources connected · 821 chunks indexed','g'),900);
+</script>
+</body>
+</html>
